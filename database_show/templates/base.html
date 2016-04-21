@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" name="save" content="history">
+<title>展会信息</title>
+<!-- Bootstrap core CSS -->
+    <link href="{{ url_for('static', filename='css/bootstrap.min.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/colResizable.css') }}" rel="stylesheet">
+    <link href="{{ url_for('static', filename='css/jPaginate.css') }}" rel="stylesheet">
+
+    <script src="{{url_for('static', filename='js/jquery.min.js')}}"></script>
+    <script src="{{url_for('static', filename='js/jquery.paginate.js')}}"></script>
+    <script src="{{url_for('static', filename='js/colResizable-1.5.min.js')}}"></script>
+<style>
+
+/*分页样式*/
+.paginate a{
+    display: inline-block;
+    color: #428bca;
+    height: 25px;
+    line-height: 25px;
+    padding: 0 10px;
+    border: 1px solid #ddd;
+    margin: 0 2px;
+    border-radius: 4px;
+    vertical-align: middle;
+    font-family: verdana;
+}
+
+#events .datagrid-sort {
+  display: inline;
+  padding: 0 13px 0 0;
+  background: url('../static/img/datagrid_icons.png') no-repeat -64px center;
+}
+#events .datagrid-sort-desc {
+  display: inline;
+  padding: 0 13px 0 0;
+  background: url('../static/img/datagrid_icons.png') no-repeat -16px center;
+}
+#events .datagrid-sort-asc {
+  display: inline;
+  padding: 0 13px 0 0;
+  background: url('../static/img/datagrid_icons.png') no-repeat 0px center;
+}
+
+#events td
+  {
+  font-size:1em;
+  text-align:left;
+  border:1px solid #98bf21;
+  padding:3px 7px 2px 7px;
+  }
+
+#events input
+{
+    border:0;
+    background:transparent;
+    width:100%;
+}
+
+.red{color:red;}
+.top{background:#CCCCCC;cursor:pointer;}
+.tr_select
+{
+    font-size:120%;
+    color:red;
+}
+</style>
+
+</head>
+<body>
+<h1><a href="/" style="text-align:center; ">展会信息</a></h1>
+
+<script type=text/javascript>
+$(function(){
+    //点击搜索，把sort,del,update信息都设为none
+    $('#search').bind('click', function() {
+        expo_name = $('input[name="ExpoName"]').val();
+        start_date= $('input[name="StartDate"]').val();
+        city_name = $('input[name="CityName"]').val();
+        sid = $('input[name="Sid"]').val();
+        itemid = $('input[name="Itemid"]').val();
+        unit_name = $('input[name="UnitName"]').val();
+        unit_code = $('input[name="UnitCode"]').val();
+        $("#search_info").val(expo_name+'&'+start_date+'&'+city_name+'&'+sid+'&'+itemid+'&'+unit_name+'&'+unit_code); //为排序信息输入框赋值，以便后续翻页时取得该值
+        $("#update_info").val('none');
+        $("#del_info").val('none');
+        $("#sort_info").val('none');
+        $("#add_info").val('none');
+        show();
+        return false;
+    });
+
+
+    /*点击排序,把search,del,update信息都设为none
+     排序有三种状态：无序，升序，降序，默认为无序，第一次点击为升序，第二次点击为降序，第三次点击为无序*/
+    $('th>a').bind('click', function(){
+        sort = $(this).attr('sort');    //首先取出上次的排序方式
+        //alert(sort);
+        if(sort==''){
+            $(this).attr('sort', 'asc');
+            $(this).next().attr('class',"datagrid-sort-asc");
+        }
+        if(sort=='asc'){
+            $(this).attr('sort', 'desc');
+            $(this).next().attr('class',"datagrid-sort-desc");
+        }
+        if(sort=='desc'){
+            $(this).attr('sort', '');
+            $(this).next().attr('class',"datagrid-sort");
+        }
+        sort = $(this).attr('sort');
+        //alert(sort);
+        if(sort!=''){
+            //alert(sort);
+            keyword = $(this).attr('name');
+            //alert(sort+keyword);
+            $("#sort_info").val(keyword+'&'+sort); //为排序信息输入框赋值，以便后续翻页时取得该值
+            $("#update_info").val('none');
+            $("#del_info").val('none');
+            $("#search_info").val('none');
+            $("#add_info").val('none');
+            show();
+        }
+        else{
+            $("#sort_info").val('none');
+        }
+    });
+
+
+    //页面加载时调用show()获取数据，此时搜索关键字全为空，所以后台返回全部数据
+    show();
+
+    //更新操作，input change事件，注册为document（也可以注册为table的事件）的事件是防止表格不存在，因为因为表格是动态生成的
+    $('#event-info').on('change',"td>input",function(){
+        $(this).css("background-color","#FFFFCC");
+        id = $(this).attr('id');
+        var value = document.getElementById(id).value;
+        //alert(id+value);
+        $("#update_info").val(id+'&'+value); //为修改信息输入框赋值，以便后续翻页时取得该值
+        $("#del_info").val('none');
+        $("#add_info").val('none');
+        current_page = $('#current_page').val();
+        //alert(current_page);
+        show(current_page);
+    });
+
+    //点击删除
+    $(document).on('click',"tbody td>a",function(){
+    //$('td a').bind('click', function(){
+        id = $(this).attr('id');      //被删除数据的id
+        alert(id);
+        $("#del_info").val(id); //为删除信息输入框赋值
+        $("#update_info").val('none');
+        $("#add_info").val('none');
+        //alert($("#sort_info").val());
+        current_page = $('#current_page').val();
+        show(current_page);
+    });
+
+    //添加一行
+    $('#addRow').bind('click', function(){
+        addRow();
+    });
+
+    $(document).on('click',"#addSure",function(){
+    //$('td a').bind('click', function(){
+        itemid = $('input[name="addItemid"]').val();
+        sid = $('input[name="addSid"]').val();
+        expo_name = $('input[name="addExpoName"]').val();
+        start_date= $('input[name="addStartDate"]').val();
+        end_date= $('input[name="addEndDate"]').val();
+        city_name = $('input[name="addCityName"]').val();
+        unit_name = $('input[name="addUnitName"]').val();
+        unit_code = $('input[name="addUnitCode"]').val();
+        site = $('input[name="addSite"]').val();
+        exhibitor = $('input[name="addExhibitor"]').val();
+        visitor = $('input[name="addVisitor"]').val();
+        expo_area = $('input[name="addExpoArea"]').val();
+        get_date = $('input[name="addGetDate"]').val();
+        $("#add_info").val(itemid+'&'+sid+'&'+expo_name +'&'+unit_code +'&'+unit_name+'&'+city_name +'&'+start_date +'&'+end_date +'&'+site +'&'+exhibitor+'&'+visitor  +'&'+expo_area +'&'+get_date); //为排序信息输入框赋值，以便后续翻页时取得该值
+        alert($("#add_info").val());
+        $("#update_info").val('none');
+        $("#del_info").val('none');
+        current_page = $('#current_page').val();
+        show(current_page);
+    });
+
+
+
+    //根据复选框状态进行删除
+    $('#mutiple_del').bind('click', function(){
+        var ids = "";
+        $('input[type="checkbox"][name="select"]:checked').each(function() {
+            ids = ids + "&" + $(this).val();
+            $(this).css("background-color","#FFFFCC");
+        });
+        ids = ids.substring(1, ids.Length);
+        if(ids) {
+            alert(ids);
+            //$("#del_info").attr("value",ids);
+            $("#del_info").val(ids);
+            $("#update_info").val('none');
+            //$("#search_info").val();
+            current_page = $('#current_page').val();
+            show(current_page);
+        }
+        else {
+            alert('请至少选择一项！');
+            return false;
+        }
+    });
+
+    //选中行变色
+    $('#event-info').on('change',"td>span>input",function(){
+        $(this).parent().parent().parent().toggleClass("tr_select");
+    });
+
+
+    //提交所有参数到后台，后台根据参数状态选择对应的操作
+    function show(page) {
+        $.ajax({
+            type: 'GET',
+            url: '/getargs',
+            data: {
+                Page: page,
+                SearchInfo: $("#search_info").val(),    //包括expo_name,start_date,city_name,sid,itemid,unit_name,unit_code
+                SortInfo: $("#sort_info").val(),    //包括keyword，sort
+                UpdateInfo: $("#update_info").val(),    //包括id，keyword，value
+                DelInfo: $("#del_info").val(),   //包括id
+                AddInfo: $("#add_info").val()   //包括包括itemid,sid,expo_name,unit_code,unit_name,unit_name_en,start_date,end_date,city_name,organizer,site,exhibitor,visitor,expo_area,get_date
+            },
+            success: function (data) {
+                //alert('success');
+                events = data.result.splice(1);     //result的第一项是页数信息，从第二项开始才是event数据
+                pagination = data.result[0];
+                total_pages = pagination.total_pages;
+                current_page = pagination.current_page;
+                $("#current_page").val(current_page);
+                var $table = $('#event-info');
+                $table.empty();
+                createTable(events);    //创建表格
+                createPage(total_pages, current_page);  //创建分页
+            },
+            error: function (){
+                alert('error');
+            }
+        });
+    }
+
+    //创建分页
+    function createPage(count, index) {
+        $("#paginate").paginate({
+            count: count,
+            start: index,
+            display: 9,
+            border: true,
+            border_color: '#fff',
+            text_color: '#fff',
+            background_color: 'black',
+            border_hover_color: '#ccc',
+            text_hover_color: '#000',
+            background_hover_color: '#fff',
+            images: false,
+            mouse: 'press',
+            onChange: function (page) {
+                //$('._current', '#paginationdemo').removeClass('_current').hide();
+                //$('#p' + page).addClass('_current').show();
+                show(page);
+            }
+        });
+    }
+
+
+    //创建表格
+    function createTable(data)
+    {
+        for (i in data){
+        //for (var i=1;i<data.length;i++)
+			$('#event-info').append(
+				"<tr>" +
+				"<td><span><input type='checkbox' name='select' id='select' value="+data[i].ID+"></span></td>"+
+				"<td>" + i + "</td>" +
+				"<input type='hidden' name='id' value="+data[i].ID+">"+
+                "<td>" + "<input " + "id="+data[i].ID+"&Itemid" + " value="+data[i].Itemid + ">" + "</td>"+
+                "<td>" + "<input " + "id="+data[i].ID+"&Sid" + " value="+data[i].Sid  + ">" + "</td>"+
+                "<td>" + "<input " + "id="+data[i].ID+"&ExpoName" + " value="+data[i].ExpoName + ">" + "</td>"+
+                "<td>" + "<input " + "id="+data[i].ID+"&UnitCode" + " value="+data[i].UnitCode + ">" + "</td>"+
+                "<td>" + "<input " + "id="+data[i].ID+"&UnitName" + " value="+data[i].UnitName + ">" + "</td>"+
+                "<td>" + "<input " + "id="+data[i].ID+"&CityName" + " value="+data[i].CityName + ">" + "</td>"+
+                "<td>" + "<input " + "id="+data[i].ID+"&StartDate" + " value="+data[i].StartDate + ">" + "</td>"+
+                "<td>" + "<input " + "id="+data[i].ID+"&EndDate" + " value="+data[i].EndDate + ">" + "</td>"+
+                "<td>" + "<input " + "id="+data[i].ID+"&Site" + " value="+data[i].Site + ">" + "</td>"+
+                "<td>" + "<input " + "id="+data[i].ID+"&Exhibitor" + " value="+data[i].Exhibitor + ">" + "</td>"+
+                "<td>" + "<input " + "id="+data[i].ID+"&Visitor" + " value="+data[i].Visitor + ">" + "</td>"+
+                "<td>" + "<input " + "id="+data[i].ID+"&ExpoArea" + " value="+data[i].ExpoArea + ">" + "</td>"+
+                "<td>" + "<input " + "id="+data[i].ID+"&GetDate" + " value="+data[i].GetDate + ">" + "</td>"+
+				"<td><a href='#' id="+ data[i].ID+">"+'del' + "</a></td>"+
+                "</tr>");
+            }
+    }
+
+    //添加一行
+    function addRow()
+    {
+        $('#event-info').append(
+            "<tr>" +
+            "<td></td>"+
+            "<td></td>" +
+            "<td><span>" + "<input " + "name="+"addItemid" + " value=''" + ">" + "</span></td>"+
+            "<td><span>" + "<input " + "name="+"addSid" + " value=''" + ">" + "</span></td>"+
+            "<td><span>" + "<input " + "name="+"addExpoName" + " value=''" + ">" + "</span></td>"+
+            "<td><span>" + "<input " + "name="+"addUnitCode" + " value=''" + ">" + "</span></td>"+
+            "<td><span>" + "<input " + "name="+"addUnitName" + " value=''" + ">" + "</span></td>"+
+            "<td><span>" + "<input " + "name="+"addCityName" + " value=''" + ">" + "</span></td>"+
+            "<td><span>" + "<input " + "name="+"addStartDate" + " value=''" + ">" + "</span></td>"+
+            "<td><span>" + "<input " + "name="+"addEndDate" + " value=''"+ ">" + "</span></td>"+
+            "<td><span>" + "<input " + "name="+"addSite" + " value=''"+ ">" + "</span></td>"+
+            "<td><span>" + "<input " + "name="+"addExhibitor" + " value=''"+ ">" + "</span></td>"+
+            "<td><span>" + "<input " + "name="+"addVisitor" + " value=''"+ ">" + "</span></td>"+
+            "<td><span>" + "<input " + "name="+"addExpoArea" + " value=''" + ">" + "</span></td>"+
+            "<td><span>" + "<input " + "name="+"addGetDate" + " value=''" + ">" + "</span></td>"+
+            "<td><span><a href='#' id='addSure'"+">"+'add' + "</a></span></td>"+
+            "</tr>");
+    }
+
+    //拖动改变表格宽度
+    $(function(){
+	    $("#events").colResizable({
+		    liveDrag:true,
+		    gripInnerHtml:"<div class='grip'></div>",
+		    draggingClass:"dragging"
+	    });
+    });
+});
+</script>
+
+<form name="myForm" action="" method="POST">
+展会名:<input width="20px" name="ExpoName" id="ExpoName">
+开始日期:<input name='StartDate' id="StartDate">
+城市名:<input name='CityName' id='CityName'>
+Sid:<input name="Sid" id="Sid">
+<br>
+Itemid:<input name="Itemid" id="Itemid">
+展馆名:<input name="UnitName" id="UnitName">
+展馆码:<input name="UnitCode" id="UnitCode">
+<br>
+<input  type='hidden' id="del_info" value="none">
+<input  type='hidden' id="sort_info" value="none">
+<input  type='hidden' id="update_info" value="none">
+<input  type='hidden' id="search_info" value="none">
+<input  type='hidden' id="add_info" value="none">
+<input type='hidden' id="current_page" value="">
+<br>
+<button id="search" type='button' style="font-size:16px;">查找</button>
+<br>
+<br>
+<!--分页-->
+<div id="paginationdemo" class="paginate">
+    <div id="paginate"></div>
+</div>
+<table id="events" width="100%" border="0" cellpadding="0" cellspacing="0">
+    <thead>
+    <tr class="top">
+        <th>选择</th>
+    	<th>序号</th>
+        <th>
+            <a href="#" id="Itemid" name="Itemid" sort="">Itemid</a>
+            <span class="datagrid-sort"></span>
+        </th>
+        <th>
+            <a href="#" id="Sid" name="Sid" sort="">Sid</a>
+            <span class="datagrid-sort"></span>
+        </th>
+        <th>
+            <a href="#" name="ExpoName" sort="">展会名</a>
+            <span class="datagrid-sort"></span>
+        </th>
+        <th>
+            <a href="#" sort="" name="UnitCode">展馆码</a>
+            <span class="datagrid-sort"></span>
+        </th>
+        <th>
+            <a href="#" sort="" name="UnitName">展馆名</a>
+            <span class="datagrid-sort"></span>
+        </th>
+        <!--<th><li>
+        	<span class="Darrow"></span>
+            <a href="#" sort="asc" name="UnitName_en">展馆英文名</a>
+        </li></th>-->
+        <th>
+            <a href="#" id='CityName' name="CityName" sort="">城市名</a>
+            <span class="datagrid-sort"></span>
+        </th>
+        <th>
+            <a href="#" id="StartDate" name="StartDate" sort="">开始日期</a>
+            <span class="datagrid-sort"></span>
+        </th>
+        <th>
+            <a href="#" sort="" name="EndDate">结束日期</a>
+            <span class="datagrid-sort"></span>
+        </th>
+        <!--<th><li><a href="#">产业</a></li></th>-->
+        <!--<th ><li><a href="#">主办商</a></li></th>-->
+        <th>
+            <a href="#" sort="" name="Site">网址</a>
+            <span class="datagrid-sort"></span>
+        </th>
+        <th>
+            <a href="#" sort="" name="Exhibitor">参展商</a>
+            <span class="datagrid-sort"></span>
+        </th>
+        <th>
+            <a href="#" sort="" name="Visitor">参展人数</a>
+            <span class="datagrid-sort"></span>
+       </th>
+        <th>
+            <a href="#" sort="" name="ExpoArea">参展面积</a>
+            <span class="datagrid-sort"></span>
+        </th>
+        <th>
+            <a href="#" sort="" name="GetDate">爬取日期</a>
+            <span class="datagrid-sort"></span>
+        </th>
+        <th>操作</th>
+    </tr>
+    </thead>
+
+    <tbody id="event-info">
+    <!--表格内容由createTable()动态生成-->
+    </tbody>
+</table>
+<br>
+<!--分页-->
+<div id="paginationdemo" class="paginate">
+    <div id="paginate"></div>
+</div>
+<br>
+    <button id="addRow" type="button" style="font-size:16px;">添加一行</button>
+    <button id="mutiple_del" type='button' style="font-size:16px;">删除</button>
+</form>
+
+</body>
+</html>
