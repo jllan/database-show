@@ -234,6 +234,8 @@ $(function(){
                 //alert('success');
                 events = data.result.splice(1);     //result的第一项是页数信息，从第二项开始才是event数据
                 pagination = data.result[0];
+                total_num = pagination.total_num;
+                num = pagination.num;
                 total_pages = pagination.total_pages;
                 current_page = pagination.current_page;
                 $("#current_page").val(current_page);
@@ -241,6 +243,7 @@ $(function(){
                 $table.empty();
                 createTable(events);    //创建表格
                 createPage(total_pages, current_page);  //创建分页
+                showNum(total_num, num);
             },
             error: function (){
                 alert('error');
@@ -248,9 +251,14 @@ $(function(){
         });
     }
 
+    //显示数据总条数和符合查询条件的条数
+    function showNum(totalNum, num) {
+        $("#showNum").html('总数量' + totalNum + ',符合查询条件的数量' + num);
+    }
+
     //创建分页
     function createPage(count, index) {
-        $("#paginate").paginate({
+        $("[id*='paginate']").paginate({
             count: count,
             start: index,
             display: 9,
@@ -354,6 +362,7 @@ Itemid:<input name="Itemid" id="Itemid">
 <br>
 <button id="search" type='button' style="font-size:16px;">查找</button>
 <br>
+<b id="showNum"></b>
 <br>
 <!--分页-->
 <div id="paginationdemo" class="paginate">
@@ -433,7 +442,7 @@ Itemid:<input name="Itemid" id="Itemid">
 <br>
 <!--分页-->
 <div id="paginationdemo" class="paginate">
-    <div id="paginate"></div>
+    <div id="paginate-bottom"></div>
 </div>
 <br>
     <button id="addRow" type="button" style="font-size:16px;">添加一行</button>

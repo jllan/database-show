@@ -96,11 +96,14 @@ def sort(sort_info='', page=1):
     sort = sort_info[1]
     print page, keyword, sort
     print getattr(getattr(Event, keyword),sort)()
+    total_num = Event.query.filter().count()
     '''根据变量来调用类对应的属性和方法，这里需要用到python的自省和反射,getattr(obj, attr)将返回obj中名为attr的属性的值'''
     paginate = Event.query.filter(Event.StartDate>CURRENT_DATE).order_by(getattr(getattr(Event,keyword), sort)()).paginate(page, PAGE_SIZE, False)
     #paginate = Event.query.order_by(Event.StartDate.asc(), Event.CityName.asc(),Event.ExpoName.asc()).paginate(page, PAGE_SIZE, False)
     events = []
     pagination = {}
+    pagination['total_num'] = total_num
+    pagination['num'] = total_num
     pagination['total_pages'] = paginate.pages
     pagination['current_page'] = page
     #pagination['paginate'] = paginate
@@ -144,6 +147,8 @@ def search(search_info='', page=1):
         unit_code = search_info[6]
         print expo_name, city_name, start_date, sid, itemid, unit_code, unit_name
     try:
+        total_num = Event.query.filter().count()
+        num = Event.query.filter(Event.StartDate>CURRENT_DATE, Event.ExpoName.like('%'+expo_name+'%'), Event.CityName.like('%'+city_name+'%'), Event.UnitName.like('%'+unit_name+'%'), Event.StartDate.like('%'+start_date+'%')).count()
         paginate = Event.query.filter(Event.StartDate>CURRENT_DATE, Event.ExpoName.like('%'+expo_name+'%'), Event.CityName.like('%'+city_name+'%'), Event.UnitName.like('%'+unit_name+'%'), Event.StartDate.like('%'+start_date+'%'), Event.Sid.like('%'+sid+'%'), Event.Itemid.like('%'+itemid+'%')).order_by(Event.StartDate.asc(), Event.CityName.asc(),Event.ExpoName.asc()).paginate(page, PAGE_SIZE, False)
         #paginate = Event.query.all().paginate(page, PAGE_SIZE, False)
     except Exception,e:
@@ -159,7 +164,7 @@ def search(search_info='', page=1):
         else:
             print '共%s页数据,当前%s页'%(paginate.pages,page)
             events = []
-            pagination = {'total_pages':paginate.pages, 'current_page':page, 'per_page':PAGE_SIZE}
+            pagination = {'total_num':total_num, 'num':num, 'total_pages':paginate.pages, 'current_page':page, 'per_page':PAGE_SIZE}
             events.append(pagination)
             object_list = paginate.items
             for i in object_list:
