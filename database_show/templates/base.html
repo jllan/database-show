@@ -10,8 +10,8 @@
     <link href="{{ url_for('static', filename='css/bootstrap-select.css') }}" rel="stylesheet">
 
     <script src="{{url_for('static', filename='js/jquery.min.js')}}"></script>
-    <script src="{{url_for('static', filename='js/jquery.paginate.js')}}"></script>
     <script src="{{url_for('static', filename='js/bootstrap.min.js')}}"></script>
+    <script src="{{url_for('static', filename='js/jquery.paginate.js')}}"></script>
     <script src="{{url_for('static', filename='js/colResizable-1.5.min.js')}}"></script>
     <script src="{{url_for('static', filename='js/bootstrap-select.js')}}"></script>
 <style>
@@ -295,10 +295,10 @@ $(function(){
 				"<input type='hidden' name='id' value="+data[i].ID+">"+
                 "<td>" + "<input " + "id="+data[i].ID+"&Itemid" + " value="+data[i].Itemid + ">" + "</td>"+
                 "<td>" + "<input " + "id="+data[i].ID+"&Sid" + " value="+data[i].Sid  + ">" + "</td>"+
-                "<td>" + "<input " + "id="+data[i].ID+"&ExpoName" + " value="+data[i].ExpoName + ">" + "</td>"+
+                "<td>" + "<input " + "id="+data[i].ID+"&ExpoName" + " value='"+data[i].ExpoName + "'>" + "</td>"+
                 "<td>" + "<input " + "id="+data[i].ID+"&UnitCode" + " value="+data[i].UnitCode + ">" + "</td>"+
-                "<td>" + "<input " + "id="+data[i].ID+"&UnitName" + " value="+data[i].UnitName + ">" + "</td>"+
-                "<td>" + "<input " + "id="+data[i].ID+"&CityName" + " value="+data[i].CityName + ">" + "</td>"+
+                "<td>" + "<input " + "id="+data[i].ID+"&UnitName" + " value='"+data[i].UnitName + "'>" + "</td>"+
+                "<td>" + "<input " + "id="+data[i].ID+"&CityName" + " value='"+data[i].CityName + "'>" + "</td>"+
                 "<td>" + "<input " + "id="+data[i].ID+"&StartDate" + " value="+data[i].StartDate + ">" + "</td>"+
                 "<td>" + "<input " + "id="+data[i].ID+"&EndDate" + " value="+data[i].EndDate + ">" + "</td>"+
                 "<td>" + "<input " + "id="+data[i].ID+"&Site" + " value="+data[i].Site + ">" + "</td>"+
@@ -388,7 +388,7 @@ Itemid:<input name="Itemid" id="Itemid">
 <br>
 <b id="showNum"></b>
 <br>
-<label for="id_select"></label>
+<label for="id_select">选择需要隐藏的列</label>
  <select id="id_select" class="selectpicker" multiple="multiple">
      <option value="2">Itemid</option>
      <option value="3">Sid</option>
@@ -404,21 +404,20 @@ Itemid:<input name="Itemid" id="Itemid">
      <option value="13">ExpoArea</option>
      <option value="14">GetDate</option>
  </select>
-
 <!--分页-->
 <div id="paginationdemo" class="paginate">
     <div id="paginate"></div>
 </div>
-<table id="events" width="100%" border="0" cellpadding="0" cellspacing="0" data-show-columns="true">
+<table id="events" width="100%" border="0" cellpadding="0" cellspacing="0">
     <thead>
     <tr class="top">
-        <th>选择</th>
-    	<th>序号</th>
-        <th>
+        <th width="40px">选择</th>
+    	<th width="40px">序号</th>
+        <th  width="80px">
             <a href="#" id="Itemid" name="Itemid" sort="">Itemid</a>
             <span class="datagrid-sort"></span>
         </th>
-        <th>
+        <th  width="40px">
             <a href="#" id="Sid" name="Sid" sort="">Sid</a>
             <span class="datagrid-sort"></span>
         </th>
@@ -426,11 +425,11 @@ Itemid:<input name="Itemid" id="Itemid">
             <a href="#" name="ExpoName" sort="">展会名</a>
             <span class="datagrid-sort"></span>
         </th>
-        <th>
+        <th width="60px">
             <a href="#" sort="" name="UnitCode">展馆码</a>
             <span class="datagrid-sort"></span>
         </th>
-        <th>
+        <th width="120px">
             <a href="#" sort="" name="UnitName">展馆名</a>
             <span class="datagrid-sort"></span>
         </th>
@@ -438,41 +437,41 @@ Itemid:<input name="Itemid" id="Itemid">
         	<span class="Darrow"></span>
             <a href="#" sort="asc" name="UnitName_en">展馆英文名</a>
         </li></th>-->
-        <th>
+        <th width="60px">
             <a href="#" id='CityName' name="CityName" sort="">城市名</a>
             <span class="datagrid-sort"></span>
         </th>
-        <th>
+        <th width="80px">
             <a href="#" id="StartDate" name="StartDate" sort="">开始日期</a>
             <span class="datagrid-sort"></span>
         </th>
-        <th>
+        <th width="80px">
             <a href="#" sort="" name="EndDate">结束日期</a>
             <span class="datagrid-sort"></span>
         </th>
         <!--<th><li><a href="#">产业</a></li></th>-->
         <!--<th ><li><a href="#">主办商</a></li></th>-->
-        <th>
+        <th width="80px">
             <a href="#" sort="" name="Site">网址</a>
             <span class="datagrid-sort"></span>
         </th>
-        <th>
+        <th width="80px">
             <a href="#" sort="" name="Exhibitor">参展商</a>
             <span class="datagrid-sort"></span>
         </th>
-        <th>
+        <th width="80px">
             <a href="#" sort="" name="Visitor">参展人数</a>
             <span class="datagrid-sort"></span>
        </th>
-        <th>
+        <th width="80px">
             <a href="#" sort="" name="ExpoArea">参展面积</a>
             <span class="datagrid-sort"></span>
         </th>
-        <th>
+        <th width="80px">
             <a href="#" sort="" name="GetDate">爬取日期</a>
             <span class="datagrid-sort"></span>
         </th>
-        <th>操作</th>
+        <th width="40px">操作</th>
     </tr>
     </thead>
 

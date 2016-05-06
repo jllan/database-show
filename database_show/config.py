@@ -9,4 +9,4 @@ TABLE_NAME = 'eventlist_201604_only'
 
 
 #CURRENT_DATE = datetime.date.today().strftime("%Y-%m")
-CURRENT_DATE = '2016-03'
+CURRENT_DATE = '2016-04'
