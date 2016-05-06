@@ -14,8 +14,8 @@
     <script src="{{url_for('static', filename='js/jquery.paginate.js')}}"></script>
     <script src="{{url_for('static', filename='js/colResizable-1.5.min.js')}}"></script>
     <script src="{{url_for('static', filename='js/bootstrap-select.js')}}"></script>
-<style>
 
+<style>
 /*分页样式*/
 .paginate a{
     display: inline-block;
@@ -63,11 +63,7 @@
 
 .red{color:red;}
 .top{background:#CCCCCC;cursor:pointer;}
-.tr_select
-{
-    font-size:120%;
-    color:red;
-}
+.tr_select {font-size:120%;  color:red;}
 </style>
 
 </head>
@@ -130,7 +126,6 @@ $(function(){
         }
     });
 
-
     //页面加载时调用show()获取数据，此时搜索关键字全为空，所以后台返回全部数据
     show();
 
@@ -189,8 +184,6 @@ $(function(){
         show(current_page);
     });
 
-
-
     //根据复选框状态进行删除
     $('#mutiple_del').bind('click', function(){
         var ids = "";
@@ -247,6 +240,7 @@ $(function(){
                 createTable(events);    //创建表格
                 createPage(total_pages, current_page);  //创建分页
                 showNum(total_num, num);
+                showColumn();
             },
             error: function (){
                 alert('error');
@@ -344,26 +338,36 @@ $(function(){
 	    });
     });
 
-    //选择显示或隐藏列
+    //初始化选择框
     $(window).on('load', function () {
         $('.selectpicker').selectpicker({
             'selectedText': 'cat'
         });
     });
 
-    $(document).ready(
-    function () {
-        $("#id_select").change(function () {
-            var colnum = $("#id_select").val();
-            select_list = colnum.toString().split(',');
-            //alert(select_list);
-            $.each(select_list,function(n,value) {
-                //alert(value);
+    //把选中的列赋值给hidden_column输入框
+    $("#id_select").change(function () {
+        var column = $("#id_select").val();
+        select_column = column.toString().split(',');
+        $("#hidden_column").val(select_column);
+        showColumn();
+    });
+    
+    //根据hidden_column输入框的值显示或隐藏列
+    function showColumn() {
+        var column = $("#hidden_column").val();
+        if(column!=''){
+            select_column = column.toString().split(',');
+            //alert(select_column);
+            $('table tr').find("th").show();
+            $('table tr').find("td").show();
+            $.each(select_column,function(n,value) {
                 $('table tr').find("th:eq("+ value +")").hide();
                 $('table tr').find("td:eq("+ value +")").hide();
-           });
-        });
-    })
+            });
+        }
+    }
+
 });
 </script>
 
@@ -383,6 +387,7 @@ Itemid:<input name="Itemid" id="Itemid">
 <input  type='hidden' id="search_info" value="none">
 <input  type='hidden' id="add_info" value="none">
 <input type='hidden' id="current_page" value="">
+<input id="hidden_column" value="">
 <br>
 <button id="search" type='button' style="font-size:16px;">查找</button>
 <br>
@@ -390,6 +395,8 @@ Itemid:<input name="Itemid" id="Itemid">
 <br>
 <label for="id_select">选择需要隐藏的列</label>
  <select id="id_select" class="selectpicker" multiple="multiple">
+     <option value="0">选择</option>
+     <option value="1">序号</option>
      <option value="2">Itemid</option>
      <option value="3">Sid</option>
      <option value="4">ExpoName</option>
@@ -404,6 +411,7 @@ Itemid:<input name="Itemid" id="Itemid">
      <option value="13">ExpoArea</option>
      <option value="14">GetDate</option>
  </select>
+
 <!--分页-->
 <div id="paginationdemo" class="paginate">
     <div id="paginate"></div>
